@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+    <title>Supervision Arduino Mega</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef2f7;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px #cccccc;
+        }
+
+        h1 {
+            color: #174780;
+        }
+
+        .bloc {
+            background: #f0f4f8;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .on {
+            background: #28a745;
+        }
+
+        .off {
+            background: #dc3545;
+        }
+
+        #distance {
+            font-size: 35px;
+            color: #174780;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Commande Arduino Mega</h1>
+    <p>BTS CIEL - Electronique et Reseaux</p>
+
+    <div class="bloc">
+        <h2>Commande de la LED</h2>
+
+        <button class="on" onclick="commande('on')">
+            ALLUMER
+        </button>
+
+        <button class="off" onclick="commande('off')">
+            ETEINDRE
+        </button>
+
+        <h3>Etat de la LED</h3>
+        <p id="led">INCONNU</p>
+    </div>
+
+    <div class="bloc">
+        <h2>Distance du sonar</h2>
+        <p id="distance">-- cm</p>
+    </div>
+
+    <p id="connexion">Connexion en cours...</p>
+
+</div>
+
+<script>
+    async function commande(action) {
+        try {
+            const reponse = await fetch("/" + action, {
+                method: "POST"
+            });
+
+            if (!reponse.ok) {
+                throw new Error("Commande impossible");
+            }
+
+            actualiser();
+        } catch (erreur) {
+            alert("Erreur de communication");
+        }
+    }
+
+    async function actualiser() {
+        try {
+            const reponse = await fetch("/data");
+
+            if (!reponse.ok) {
+                throw new Error("Erreur serveur");
+            }
+
+            const data = await reponse.json();
+
+            document.getElementById("led").textContent =
+                data.led;
+
+            document.getElementById("led").style.color =
+                data.led === "ALLUMEE" ? "green" :
+                data.led === "ETEINTE" ? "red" : "gray";
+
+            document.getElementById("distance").textContent =
+                data.distance === null
+                ? "-- cm"
+                : data.distance + " cm";
+
+            document.getElementById("connexion").textContent =
+                "Serveur connecte";
+
+        } catch (erreur) {
+            document.getElementById("connexion").textContent =
+                "Serveur deconnecte";
+        }
+    }
+
+    setInterval(actualiser, 500);
+    actualiser();
+</script>
+
+</body>
+</html>
